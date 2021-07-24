@@ -1,0 +1,1 @@
+This *.http files are provided to test routes by a Visual Studio Code extension name REST API

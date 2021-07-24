@@ -1,0 +1,25 @@
+GET http://localhost:8000/recipes
+
+###
+
+POST http://localhost:8000/recipes
+Content-Type: application/json
+
+{
+  "name": "nova receita",
+  "description": "receita com descricao"
+}
+
+###
+
+DELETE http://localhost:8000/recipes/3deb4ffc-55c3-4305-99bc-9969303700ad
+
+###
+
+PATCH http://localhost:8000/recipes/68f82cff-db98-4e25-ab15-a6c7ec900bfb
+Content-Type: application/json
+
+{
+  "name": "atualizada",
+  "description": "descricao atualizada"
+}

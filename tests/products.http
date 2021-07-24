@@ -1,0 +1,27 @@
+POST http://localhost:8000/products
+Content-Type: application/json
+
+{
+  "name": "primeiro produto",
+  "description": "primeira descricao",
+  "quantity": 2
+}
+
+###
+
+GET http://localhost:8000/products
+
+###
+
+DELETE http://localhost:8000/products/7c77432b-98bb-4801-bd09-8ca56e7726b0
+
+###
+
+PATCH http://localhost:8000/products/1adfb6ab-388a-417f-88a7-844ad42eb39f
+Content-Type: application/json
+
+{
+  "name": "atualizado",
+  "description": "atualizada",
+  "quantity": 50
+}

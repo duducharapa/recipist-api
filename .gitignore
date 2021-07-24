@@ -1,0 +1,5 @@
+# Conf files
+.env
+
+# Compiled EXE
+recipist-api.exe
