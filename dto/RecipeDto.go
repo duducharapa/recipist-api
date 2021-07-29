@@ -1,8 +1,9 @@
 package dto
 
+// TODO: Adicionar RecipeEditDTO
 type RecipeDto struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string
+	Description string
 }
 
 func NewRecipeDto() *RecipeDto {

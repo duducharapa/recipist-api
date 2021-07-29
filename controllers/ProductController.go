@@ -1,15 +1,13 @@
-// Package that have all app controllers to resolve REST functionalities
-// Every controller struct have one Repository for storage persistence purposes
 package controllers
 
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/duducharapa/recipist-api/dto"
 	"github.com/duducharapa/recipist-api/repository"
+	"github.com/duducharapa/recipist-api/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -29,32 +27,51 @@ func NewProductController(router *mux.Router, db *sql.DB) *ProductController {
 	return controller
 }
 
-// Route: GET /products
-// Returns:
-// 	200: Product array
-//	500: Failed to search any or more products
+//	swagger:route GET /products products allProducts
+//
+//	Lists all products in the API
+//
+//		Produces:
+//		- application/json
+//
+//		Schemes: http
+//
+//		Responses:
+//			200: Array of products
+//			500: Internal error
 func (c *ProductController) AllProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := c.Repository.All()
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.SendError(w, "Failed to search for products", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(products)
+	utils.Send(w, products, http.StatusAccepted)
 	return
 }
 
-// Route: POST /products
-// Returns:
-//	200: The created product
-//	400: The JSON is malformed or not are JSON
+//	swagger:route POST /products products createProduct
+//
+//	Create a new product
+//
+//		Consumes:
+//		- application/json
+//
+//		Produces:
+//		- application/json
+//
+//		Schemes: http
+//
+//		Responses:
+//			201: Created product
+//			400: Malformed JSON
 func (c *ProductController) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var productDto dto.ProductDto
 	err := json.NewDecoder(r.Body).Decode(&productDto)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.SendError(w, "The body needs be a JSON content!", http.StatusBadRequest)
 		return
 	}
 
@@ -62,81 +79,120 @@ func (c *ProductController) CreateProduct(w http.ResponseWriter, r *http.Request
 	product := c.Repository.Create(&productDto)
 	c.Repository.Save(product)
 
-	json.NewEncoder(w).Encode(product)
+	utils.Send(w, product, http.StatusCreated)
 	return
 }
 
 // TODO: Adicionar verificação de UUID
-// Route: GET /products/{id}
-// Returns:
-//	200: The product searched by ID
-//	404: Cannot find the product by this ID
+//	swagger:route GET /products/{id} products findProduct
+//
+//	Find one product of a given ID
+//
+//		Produces:
+//		- application/json
+//
+//		Schemes: http
+//
+//		Responses:
+//			200: Product
+//			404: Product not found
+//			500: Internal error
 func (c *ProductController) FindProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	product, err := c.Repository.Find(params["id"])
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		utils.SendError(w, "Failed to search for a product", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(product)
+	if product.IsNull() {
+		utils.SendError(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	utils.Send(w, product, http.StatusOK)
 	return
 }
 
-// Route: PATCH /products/{id}
-// Returns:
-//	200: The updated product
-//	400: The JSON is malformed or not are JSON
-//	500: Failed to update the product
-//  404: Product not found at last search
+//	swagger:route PATCH /products/{id} products updateProduct
+//
+//	Update a product of a given ID
+//	If product not exists, throw a error before try to update
+//
+//		Produces:
+//		- application/json
+//
+//		Schemes: http
+//
+//		Responses:
+//			200: Product updated
+//			400: Malformed JSON
+//			404: Product not found
+//			500: Internal error
 func (c *ProductController) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var productDto dto.ProductDto
 	err := json.NewDecoder(r.Body).Decode(&productDto)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = c.Repository.Update(params["id"], &productDto)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.SendError(w, "Body needs to be a JSON", http.StatusBadRequest)
 		return
 	}
 
 	product, err := c.Repository.Find(params["id"])
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		utils.SendError(w, "Failed to search for a product", http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(product)
+	product, err = c.Repository.Update(params["id"], &productDto)
+
+	if err != nil {
+		utils.SendError(w, "Failed to update a product", http.StatusInternalServerError)
+		return
+	}
+
+	utils.Send(w, product, http.StatusOK)
 	return
 }
 
-// Route: DELETE /products/{id}
-// Returns:
-//	204: The product is deleted
-//	404: Cannot find the product by this ID
-//	500: Failed to delete the product
+//	swagger:route DELETE /products/{id} products deleteProduct
+//
+//	Delete one product of a given ID
+//
+//		Produces:
+//		- application/json
+//
+//		Schemes: http
+//
+//		Responses:
+//			204: Deleted
+//			404: Product not found
+//			500: Internal error to find or delete
 func (c *ProductController) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	deleted, err := c.Repository.Delete(params["id"])
+
+	product, err := c.Repository.Find(params["id"])
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		utils.SendError(w, "Failed to find a product to delete", http.StatusInternalServerError)
 		return
 	}
 
-	if !deleted {
-		http.Error(w, errors.New("Product not deleted").Error(), http.StatusInternalServerError)
+	if product.IsNull() {
+		utils.SendError(w, "Product not found", http.StatusNotFound)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	err = c.Repository.Delete(params["id"])
+
+	if err != nil {
+		utils.SendError(w, "Failed to delete product", http.StatusInternalServerError)
+		return
+	}
+
+	utils.Send(w, nil, http.StatusNoContent)
 	return
 }

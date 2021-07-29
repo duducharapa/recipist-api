@@ -26,3 +26,7 @@ func (p *Product) Consume(quantity int32) {
 		p.Quantity -= quantity
 	}
 }
+
+func (p *Product) IsNull() bool {
+	return p.Id == ""
+}

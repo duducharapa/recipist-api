@@ -17,7 +17,6 @@ func NewRecipeRepository(db *sql.DB) *RecipeRepository {
 }
 
 func (r *RecipeRepository) All() ([]*domain.Recipe, error) {
-	emptyRecipes := make([]*domain.Recipe, 0)
 	recipes := make([]*domain.Recipe, 0)
 	rows, err := r.Db.Query("SELECT id,name,description FROM recipes")
 
@@ -29,7 +28,7 @@ func (r *RecipeRepository) All() ([]*domain.Recipe, error) {
 	for rows.Next() {
 		recipe := new(domain.Recipe)
 		if err := rows.Scan(&recipe.Id, &recipe.Name, &recipe.Description); err != nil {
-			return emptyRecipes, err
+			return make([]*domain.Recipe, 0), err
 		}
 		recipes = append(recipes, recipe)
 	}

@@ -6,6 +6,7 @@ type IngredientDto struct {
 	Quantity  int32
 }
 
+// TODO: Adicionar IngredientEditDTO
 func NewIngredientDto() *IngredientDto {
 	return &IngredientDto{}
 }

@@ -1,3 +1,27 @@
+// TODO: Update Host on Swagger
+// TODO: Ler sobre a licença MIT
+// TODO: Adicionar funcionalidade de APIKEY na aplicação e na documentação
+
+//	this application is a REST API made in Go for the Recipist application
+//
+//	Terms Of Service:
+//
+//	there are no TOS at this moment, use at your own risk we take no responsability
+//
+//		Schemes: http
+//		Host: localhost
+//		BasePath: /
+//		Version: 1.0
+//		License: MIT http://opensource.org/licenses/MIT
+//		Contact: Eduardo Charapa<eduardocharapa@gmail.com> https://github.com/duducharapa
+//
+//		Consumes:
+//		- application/json
+//
+//		Produces:
+//		- application/json
+//
+// swagger:meta
 package main
 
 import (
@@ -12,10 +36,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// That function resolve the .ENV variables to use on application
-// Like appport or host
-//
-// See .env or .env.example file for more details
 func init() {
 	err := godotenv.Load()
 	if err != nil {
@@ -27,7 +47,6 @@ func main() {
 	router := mux.NewRouter()
 	db := database.SetupDB()
 
-	// Register the controllers from package CONTROLLERS
 	controllers.NewProductController(router, db)
 	controllers.NewRecipeController(router, db)
 
